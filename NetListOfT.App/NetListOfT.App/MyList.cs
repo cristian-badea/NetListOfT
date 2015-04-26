@@ -126,25 +126,29 @@ namespace NetListOfT.App
         {
             //daca am ocupat tot spatiu alocat , atunci marim spatiul
             if (size == items.Length)
-                EnsureCapacity(size + 1);
+                EnsureCapacity();
             items[size++] = item;
         }
 
-        private void EnsureCapacity(int capacity)
+        private void EnsureCapacity()
         {
-            if (items.Length < capacity)
+            int newCapacity;
+            if (items.Length == 0)
             {
-                int newCapacity = items.Length == 0 ? defaultCapacity : items.Length * 2;
-                if ((uint)newCapacity > System.Int32.MaxValue)   //numar maxim de elemente intr-un Array e maximul lui Int32. Nu putem sa sarim aceasta valoare
+                newCapacity = defaultCapacity;
+            }
+            else
+            {
+                try
+                {
+                    newCapacity = checked(items.Length * 2);
+                }
+                catch(OverflowException e)
                 {
                     newCapacity = System.Int32.MaxValue;
                 }
-                if (newCapacity < capacity)
-                {
-                    newCapacity = capacity;
-                }
-                Capacity = newCapacity;
             }
+            Capacity = newCapacity;
         }
 
         //T this[int index] { get; set; }: acces la elementul de la poziția index; aruncă ArgumentOutOfRangeException dacă indexul e mai mic decît 0 sau mai mare sau egal cu Count
@@ -181,30 +185,16 @@ namespace NetListOfT.App
 
         //bool Contains(T item) : întoarce true dacă lista conține item și false dacă nu
         public bool Contains(T item)
-        { 
-            if((Object) item == null)
+        {
+            EqualityComparer<T> comparer = EqualityComparer<T>.Default;
+            for (int i = 0; i < size; i++)
             {
-                for (int i = 0; i < size; i++)
+                if (comparer.Equals(items[i], item))
                 {
-                    if ((Object)items[i] == null)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                return false;
             }
-            else
-            {
-                EqualityComparer<T> comparer = EqualityComparer<T>.Default;
-                for(int i=0; i< size; i++)
-                {
-                    if(comparer.Equals(items[i], item))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            return false;
         }
 
         //void RemoveAt(int index) : scoate din listă elementul de la poziția index și mută toate elementele de după cu o poziție în față; aruncă ArgumentOutOfRangeException dacă indexul e mai mic decît 0 sau mai mare sau egal cu Count
